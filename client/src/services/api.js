@@ -118,6 +118,13 @@ export const api = {
   // Style Profile
   getStyleProfile: () => request('/preferences/profile'),
   updateStyleProfile: (body) => request('/preferences/profile', { method: 'PUT', body: JSON.stringify(body) }),
+  resetStyleProfile: () => request('/preferences/profile/reset', { method: 'POST' }),
+
+  // Fit Finder & Size Intelligence
+  getFitCharts: (category = '') => request(category ? `/fit/charts/${category}` : '/fit/charts'),
+  getFitPreferences: () => request('/fit/preferences'),
+  updateFitPreferences: (body) => request('/fit/preferences', { method: 'PUT', body: JSON.stringify(body) }),
+  evaluateFit: (body) => request('/fit/evaluate', { method: 'POST', body: JSON.stringify(body) }),
 
   // Admin
   getAdminSummary: () => request('/admin/summary'),

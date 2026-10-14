@@ -16,6 +16,8 @@ import ProductDetail from './pages/ProductDetail';
 import StyleStudio from './pages/StyleStudio';
 import OutfitBuilder from './pages/OutfitBuilder';
 import MixMatchStudio from './pages/MixMatchStudio';
+import StylePassport from './pages/StylePassport';
+import FitFinder from './pages/FitFinder';
 import Wardrobe from './pages/Wardrobe';
 import OutfitPlanner from './pages/OutfitPlanner';
 import Wishlist from './pages/Wishlist';
@@ -42,7 +44,9 @@ export default function App() {
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/style-studio" element={<StyleStudio />} />
+                    <Route path="/style-passport" element={<StylePassport />} />
                     <Route path="/mix-match" element={<MixMatchStudio />} />
+                    <Route path="/fit-finder" element={<FitFinder />} />
                     <Route path="/wardrobe" element={<Wardrobe />} />
                     <Route path="/outfit-planner" element={<OutfitPlanner />} />
                     <Route path="/outfit-builder" element={<OutfitBuilder />} />

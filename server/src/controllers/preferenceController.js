@@ -227,3 +227,72 @@ export async function updateStyleProfile(req, res, next) {
   }
 }
 
+/**
+ * Reset Style Profile to Default Editorial Baseline
+ */
+export async function resetStyleProfile(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const defaults = {
+      user_id: userId,
+      preferred_aesthetics: ['minimalist', 'classic'],
+      preferred_colors: ['ivory', 'charcoal', 'navy'],
+      favorite_categories: ['tops', 'bottoms'],
+      preferred_occasions: ['casual', 'office'],
+      budget_min: 0,
+      budget_max: 250,
+      lifestyle_tags: ['Capsule Wardrobe', 'Timeless Essentials'],
+      notes: 'Focus on versatile silhouettes and high cost-per-wear utility.',
+      updated_at: new Date()
+    };
+
+    if (memoryStore.user_style_profiles) {
+      const idx = memoryStore.user_style_profiles.findIndex(p => p.user_id === userId);
+      if (idx >= 0) {
+        memoryStore.user_style_profiles[idx] = { ...memoryStore.user_style_profiles[idx], ...defaults };
+      } else {
+        defaults.id = memoryStore.nextId.user_style_profiles++;
+        memoryStore.user_style_profiles.push(defaults);
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Style profile preferences reset to default.',
+        data: defaults
+      });
+    }
+
+    await query(
+      `INSERT INTO user_style_profiles (user_id, preferred_aesthetics, preferred_colors, favorite_categories, preferred_occasions, budget_min, budget_max, lifestyle_tags, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         preferred_aesthetics = VALUES(preferred_aesthetics),
+         preferred_colors = VALUES(preferred_colors),
+         favorite_categories = VALUES(favorite_categories),
+         preferred_occasions = VALUES(preferred_occasions),
+         budget_min = VALUES(budget_min),
+         budget_max = VALUES(budget_max),
+         lifestyle_tags = VALUES(lifestyle_tags),
+         notes = VALUES(notes)`,
+      [
+        userId,
+        JSON.stringify(defaults.preferred_aesthetics),
+        JSON.stringify(defaults.preferred_colors),
+        JSON.stringify(defaults.favorite_categories),
+        JSON.stringify(defaults.preferred_occasions),
+        defaults.budget_min,
+        defaults.budget_max,
+        JSON.stringify(defaults.lifestyle_tags),
+        defaults.notes
+      ]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Style profile preferences reset to default.',
+      data: defaults
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

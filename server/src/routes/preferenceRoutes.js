@@ -3,7 +3,8 @@ import {
   getPreferences,
   updatePreferences,
   getStyleProfile,
-  updateStyleProfile
+  updateStyleProfile,
+  resetStyleProfile
 } from '../controllers/preferenceController.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -14,6 +15,7 @@ router.put('/', requireAuth, updatePreferences);
 
 router.get('/profile', requireAuth, getStyleProfile);
 router.put('/profile', requireAuth, updateStyleProfile);
+router.post('/profile/reset', requireAuth, resetStyleProfile);
 
 export default router;
 

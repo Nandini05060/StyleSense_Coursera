@@ -23,6 +23,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import wardrobeRoutes from './routes/wardrobeRoutes.js';
 import plannerRoutes from './routes/plannerRoutes.js';
 import advisorRoutes from './routes/advisorRoutes.js';
+import fitRoutes from './routes/fitRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -75,6 +76,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/wardrobe', wardrobeRoutes);
 app.use('/api/planner', plannerRoutes);
 app.use('/api/advisor', advisorRoutes);
+app.use('/api/fit', fitRoutes);
 
 // 404 Fallback for API
 app.use('/api/*', (req, res) => {

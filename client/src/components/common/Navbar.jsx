@@ -12,7 +12,9 @@ import {
   Sliders,
   Layers,
   Sparkles,
-  Calendar
+  Calendar,
+  Compass,
+  Ruler
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -36,7 +38,7 @@ export default function Navbar() {
     { name: 'Discover', path: '/' },
     { name: 'Clothing', path: '/shop' },
     { name: 'Mix & Match', path: '/mix-match' },
-    { name: 'Accessories', path: '/shop?category=accessories' },
+    { name: 'Fit Finder', path: '/fit-finder' },
     { name: 'Style Studio', path: '/style-studio', highlight: true },
     { name: 'My Wardrobe', path: '/wardrobe' },
   ];
@@ -197,11 +199,27 @@ export default function Navbar() {
                       </Link>
 
                       <Link
+                        to="/style-passport"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-charcoal hover:bg-ivory transition-colors"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-burgundy" />
+                        <span>Style Passport</span>
+                      </Link>
+
+                      <Link
+                        to="/fit-finder"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-charcoal hover:bg-ivory transition-colors"
+                      >
+                        <Ruler className="w-3.5 h-3.5 text-burgundy" />
+                        <span>Fit Finder & Sizing</span>
+                      </Link>
+
+                      <Link
                         to="/style-studio"
                         className="flex items-center gap-2 px-4 py-2 text-xs text-charcoal hover:bg-ivory transition-colors"
                       >
                         <Sliders className="w-3.5 h-3.5 text-taupe" />
-                        <span>Style Profile</span>
+                        <span>Style Consultation</span>
                       </Link>
 
                       <div className="border-t border-[#D7D0C8]/50 mt-1 pt-1">
@@ -261,6 +279,13 @@ export default function Navbar() {
               className="block py-2 text-xs font-sans font-medium uppercase tracking-[0.18em] text-charcoal hover:text-burgundy"
             >
               Accessories
+            </Link>
+            <Link
+              to="/fit-finder"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-xs font-sans font-medium uppercase tracking-[0.18em] text-burgundy font-semibold"
+            >
+              Fit Finder
             </Link>
             <Link
               to="/style-studio"

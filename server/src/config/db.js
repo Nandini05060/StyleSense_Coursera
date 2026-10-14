@@ -25,6 +25,7 @@ const memoryStore = {
   wardrobe_wear_logs: [],
   dismissed_gap_suggestions: [],
   user_style_profiles: [],
+  user_fit_profiles: [],
   nextId: {
     users: 1,
     user_preferences: 1,
@@ -42,6 +43,7 @@ const memoryStore = {
     wardrobe_wear_logs: 1,
     dismissed_gap_suggestions: 1,
     user_style_profiles: 1,
+    user_fit_profiles: 1,
   }
 };
 
@@ -116,6 +118,49 @@ async function initMemoryStore() {
     }
   ];
   memoryStore.nextId.user_style_profiles = 3;
+
+  // Seed Realistic Fit Profiles
+  memoryStore.user_fit_profiles = [
+    {
+      id: 1,
+      user_id: 2,
+      height: 168,
+      height_unit: 'cm',
+      weight: 58,
+      weight_unit: 'kg',
+      chest: 35.5,
+      waist: 28.5,
+      hips: 37.0,
+      foot_length: 9.6,
+      measurement_unit: 'in',
+      shoe_size: 'UK 6',
+      shoe_size_system: 'UK',
+      preferred_fit: 'regular',
+      usual_brand_sizes: { 'Zara': 'S', 'H&M': 'S', 'Uniqlo': 'S', 'Nike': 'UK 6' },
+      notes: 'Standard slim athletic build.',
+      updated_at: new Date()
+    },
+    {
+      id: 2,
+      user_id: 3,
+      height: 172,
+      height_unit: 'cm',
+      weight: 64,
+      weight_unit: 'kg',
+      chest: 38.0,
+      waist: 30.5,
+      hips: 39.5,
+      foot_length: 10.0,
+      measurement_unit: 'in',
+      shoe_size: 'UK 7',
+      shoe_size_system: 'UK',
+      preferred_fit: 'relaxed',
+      usual_brand_sizes: { 'Zara': 'M', 'COS': 'M', 'Massimo Dutti': 'M', 'Nike': 'UK 7' },
+      notes: 'Prefers slightly relaxed silhouettes and tailored structure.',
+      updated_at: new Date()
+    }
+  ];
+  memoryStore.nextId.user_fit_profiles = 3;
 
   // Seed Realistic Digital Wardrobe for Priya (User 2)
   const initialWardrobeUser2 = [

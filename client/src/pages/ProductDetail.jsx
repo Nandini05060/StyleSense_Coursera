@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Check, Shield, Truck, RefreshCw, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Heart, ShoppingBag, Check, Shield, Truck, RefreshCw, AlertCircle, ArrowLeft, Ruler } from 'lucide-react';
 import { api } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -10,6 +10,7 @@ import ProductGrid from '../components/product/ProductGrid';
 import Button from '../components/common/Button';
 import { Skeleton } from '../components/common/Skeleton';
 import BuyOrReuseAdvisor from '../components/wardrobe/BuyOrReuseAdvisor';
+import FitAssistantModal from '../components/fit/FitAssistantModal';
 import { formatINR } from '../utils/formatCurrency';
 
 export default function ProductDetail() {
@@ -24,6 +25,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [addingToBag, setAddingToBag] = useState(false);
+  const [showFitAssistant, setShowFitAssistant] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -216,16 +218,26 @@ export default function ProductDetail() {
                 <label className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal">
                   Size: <span className="font-normal text-taupe">{selectedSize || 'Choose Size'}</span>
                 </label>
-                {/* Live Stock Notification */}
-                <span className="text-[11px] font-sans">
-                  {isOutOfStock ? (
-                    <span className="text-burgundy font-medium">Sold Out</span>
-                  ) : currentStock <= 5 ? (
-                    <span className="text-burgundy font-medium">Only {currentStock} remaining</span>
-                  ) : (
-                    <span className="text-taupe-dark">In Stock ({currentStock} available)</span>
-                  )}
-                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFitAssistant(true)}
+                    className="text-[11px] font-sans font-medium text-burgundy hover:text-burgundy-dark underline underline-offset-2 flex items-center gap-1 transition-colors"
+                  >
+                    <Ruler className="w-3 h-3" />
+                    Find My Size / Fit Assistant
+                  </button>
+                  {/* Live Stock Notification */}
+                  <span className="text-[11px] font-sans">
+                    {isOutOfStock ? (
+                      <span className="text-burgundy font-medium">Sold Out</span>
+                    ) : currentStock <= 5 ? (
+                      <span className="text-burgundy font-medium">Only {currentStock} remaining</span>
+                    ) : (
+                      <span className="text-taupe-dark">In Stock ({currentStock} available)</span>
+                    )}
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -350,6 +362,18 @@ export default function ProductDetail() {
           <ProductGrid products={product.related} />
         </section>
       )}
+
+      {/* Fit Assistant Modal */}
+      <FitAssistantModal
+        isOpen={showFitAssistant}
+        onClose={() => setShowFitAssistant(false)}
+        product={product}
+        currentSelectedSize={selectedSize}
+        onSelectSize={(newSize) => {
+          setSelectedSize(newSize);
+          showToast(`Selected size ${newSize} for ${product.name}.`, 'success');
+        }}
+      />
     </div>
   );
 }
