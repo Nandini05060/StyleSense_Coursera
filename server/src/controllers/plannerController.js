@@ -271,6 +271,174 @@ export async function deleteSavedOutfit(req, res, next) {
 }
 
 /**
+ * Get Saved Outfit by ID (Ownership Check)
+ */
+export async function getSavedOutfitById(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const outfitId = parseInt(req.params.id, 10);
+
+    if (memoryStore.saved_outfits) {
+      const outfit = memoryStore.saved_outfits.find(o => o.id === outfitId);
+      if (!outfit) return res.status(404).json({ success: false, message: 'Outfit not found.' });
+      if (outfit.user_id !== userId) return res.status(403).json({ success: false, message: 'Unauthorized.' });
+
+      const outfitItems = (memoryStore.saved_outfit_items || [])
+        .filter(oi => oi.outfit_id === outfitId)
+        .map(oi => {
+          let itemDetails = null;
+          if (oi.item_type === 'wardrobe' && oi.wardrobe_item_id) {
+            const w = memoryStore.wardrobe_items.find(x => x.id === oi.wardrobe_item_id);
+            if (w) itemDetails = { ...w, isOwned: true };
+          } else if (oi.product_id) {
+            const p = memoryStore.products.find(x => x.id === oi.product_id);
+            if (p) itemDetails = { ...p, isOwned: false };
+          }
+          return {
+            ...oi,
+            item: itemDetails
+          };
+        });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          ...outfit,
+          items: outfitItems
+        }
+      });
+    }
+
+    const rows = await query('SELECT * FROM saved_outfits WHERE id = ?', [outfitId]);
+    if (!rows || rows.length === 0) return res.status(404).json({ success: false, message: 'Outfit not found.' });
+    if (rows[0].user_id !== userId) return res.status(403).json({ success: false, message: 'Unauthorized.' });
+
+    const items = await query(
+      `SELECT soi.*,
+              wi.name AS wardrobe_name, wi.image_url AS wardrobe_image, wi.category AS wardrobe_category, wi.color AS wardrobe_color, wi.purchase_price AS wardrobe_price,
+              p.name AS product_name, p.image_url AS product_image, p.price AS product_price
+       FROM saved_outfit_items soi
+       LEFT JOIN wardrobe_items wi ON soi.wardrobe_item_id = wi.id
+       LEFT JOIN products p ON soi.product_id = p.id
+       WHERE soi.outfit_id = ?`,
+      [outfitId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...rows[0],
+        items: items.map(i => ({
+          id: i.id,
+          slot_name: i.slot_name,
+          item_type: i.item_type,
+          isOwned: i.item_type === 'wardrobe',
+          item: i.item_type === 'wardrobe' ? {
+            id: i.wardrobe_item_id,
+            name: i.wardrobe_name,
+            image_url: i.wardrobe_image,
+            category: i.wardrobe_category,
+            color: i.wardrobe_color,
+            price: i.wardrobe_price
+          } : {
+            id: i.product_id,
+            name: i.product_name,
+            image_url: i.product_image,
+            price: i.product_price
+          }
+        }))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Update / Rename Saved Outfit (Ownership Check)
+ */
+export async function updateSavedOutfit(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const outfitId = parseInt(req.params.id, 10);
+    const { name, occasion, notes, items } = req.body;
+
+    if (memoryStore.saved_outfits) {
+      const outfit = memoryStore.saved_outfits.find(o => o.id === outfitId);
+      if (!outfit) return res.status(404).json({ success: false, message: 'Outfit not found.' });
+      if (outfit.user_id !== userId) return res.status(403).json({ success: false, message: 'Unauthorized.' });
+
+      if (name) outfit.name = name.trim();
+      if (occasion) outfit.occasion = occasion.trim();
+      if (notes !== undefined) outfit.notes = notes ? notes.trim() : null;
+      outfit.updated_at = new Date();
+
+      if (Array.isArray(items)) {
+        // Replace items
+        memoryStore.saved_outfit_items = (memoryStore.saved_outfit_items || []).filter(oi => oi.outfit_id !== outfitId);
+        items.forEach(item => {
+          memoryStore.saved_outfit_items.push({
+            id: memoryStore.nextId.saved_outfit_items++,
+            outfit_id: outfitId,
+            slot_name: item.slot_name || item.slot || 'item',
+            item_type: item.item_type || (item.isOwned ? 'wardrobe' : 'store_product'),
+            wardrobe_item_id: item.wardrobe_item_id || (item.isOwned ? item.id : null),
+            product_id: item.product_id || (!item.isOwned ? item.id : null),
+            variant_id: item.variant_id || null,
+            created_at: new Date()
+          });
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Outfit updated successfully.',
+        data: outfit
+      });
+    }
+
+    const rows = await query('SELECT user_id FROM saved_outfits WHERE id = ?', [outfitId]);
+    if (!rows || rows.length === 0) return res.status(404).json({ success: false, message: 'Outfit not found.' });
+    if (rows[0].user_id !== userId) return res.status(403).json({ success: false, message: 'Unauthorized.' });
+
+    const updates = [];
+    const params = [];
+    if (name) { updates.push('name = ?'); params.push(name.trim()); }
+    if (occasion) { updates.push('occasion = ?'); params.push(occasion.trim()); }
+    if (notes !== undefined) { updates.push('notes = ?'); params.push(notes ? notes.trim() : null); }
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+
+    params.push(outfitId);
+    await query(`UPDATE saved_outfits SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    if (Array.isArray(items)) {
+      await query('DELETE FROM saved_outfit_items WHERE outfit_id = ?', [outfitId]);
+      for (const item of items) {
+        await query(
+          `INSERT INTO saved_outfit_items (outfit_id, slot_name, item_type, wardrobe_item_id, product_id, variant_id)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            outfitId,
+            item.slot_name || item.slot || 'item',
+            item.item_type || (item.isOwned ? 'wardrobe' : 'store_product'),
+            item.wardrobe_item_id || (item.isOwned ? item.id : null),
+            item.product_id || (!item.isOwned ? item.id : null),
+            item.variant_id || null
+          ]
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Outfit updated successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Get Available Replacement Candidates for a Slot
  */
 export async function getSlotAlternatives(req, res, next) {

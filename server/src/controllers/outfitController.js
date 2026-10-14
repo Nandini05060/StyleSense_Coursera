@@ -1,5 +1,5 @@
 import { query, memoryStore } from '../config/db.js';
-import { buildOutfitSuggestion, getSlotReplacements } from '../services/outfitService.js';
+import { buildOutfitSuggestion, getSlotReplacements, evaluateOutfitCompatibility } from '../services/outfitService.js';
 
 async function getAvailableProducts() {
   if (memoryStore.products) {
@@ -80,6 +80,23 @@ export async function replaceSlot(req, res, next) {
     return res.status(200).json({
       success: true,
       data: replacements
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Evaluate deterministic compatibility for custom mix & match outfit
+ */
+export async function evaluateOutfit(req, res, next) {
+  try {
+    const { items = [], targetOccasion, targetStyle } = req.body;
+    const result = evaluateOutfitCompatibility(items, { targetOccasion, targetStyle });
+
+    return res.status(200).json({
+      success: true,
+      data: result
     });
   } catch (error) {
     next(error);

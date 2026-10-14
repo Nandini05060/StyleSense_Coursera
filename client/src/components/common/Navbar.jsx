@@ -35,6 +35,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Discover', path: '/' },
     { name: 'Clothing', path: '/shop' },
+    { name: 'Mix & Match', path: '/mix-match' },
     { name: 'Accessories', path: '/shop?category=accessories' },
     { name: 'Style Studio', path: '/style-studio', highlight: true },
     { name: 'My Wardrobe', path: '/wardrobe' },

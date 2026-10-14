@@ -102,12 +102,15 @@ export const api = {
   getWardrobeGaps: () => request('/wardrobe/gaps'),
   dismissWardrobeGap: (gap_key) => request('/wardrobe/gaps/dismiss', { method: 'POST', body: JSON.stringify({ gap_key }) }),
 
-  // Occasion-to-Outfit Planner
+  // Occasion-to-Outfit Planner & Mix & Match
   generateOutfitPlan: (body) => request('/planner/generate', { method: 'POST', body: JSON.stringify(body) }),
   saveOutfit: (body) => request('/planner/save', { method: 'POST', body: JSON.stringify(body) }),
   getSavedOutfits: () => request('/planner/saved'),
+  getSavedOutfitById: (id) => request(`/planner/saved/${id}`),
+  updateSavedOutfit: (id, body) => request(`/planner/saved/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteSavedOutfit: (id) => request(`/planner/saved/${id}`, { method: 'DELETE' }),
   getSlotAlternatives: (body) => request('/planner/alternatives', { method: 'POST', body: JSON.stringify(body) }),
+  evaluateOutfit: (body) => request('/outfits/evaluate', { method: 'POST', body: JSON.stringify(body) }),
 
   // Smart Buy-or-Reuse Advisor
   compareWithWardrobe: (body) => request('/advisor/compare', { method: 'POST', body: JSON.stringify(body) }),
