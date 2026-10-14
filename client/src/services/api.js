@@ -67,10 +67,20 @@ export const api = {
   getPreferences: () => request('/preferences'),
   updatePreferences: (body) => request('/preferences', { method: 'PUT', body: JSON.stringify(body) }),
 
-  // Wishlist
-  getWishlist: () => request('/wishlist'),
-  addToWishlist: (productId) => request('/wishlist', { method: 'POST', body: JSON.stringify({ productId }) }),
+  // Wishlist & Price Watch
+  getWishlist: (collection = '') => request(collection ? `/wishlist?collection=${encodeURIComponent(collection)}` : '/wishlist'),
+  addToWishlist: (productId, collectionName = 'All Saved Pieces', targetPrice = null) =>
+    request('/wishlist', { method: 'POST', body: JSON.stringify({ productId, collectionName, targetPrice }) }),
   removeFromWishlist: (productId) => request(`/wishlist/${productId}`, { method: 'DELETE' }),
+  updatePriceWatch: (productId, body) => request(`/wishlist/${productId}/price-watch`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateWishlistCollection: (productId, collection_name) =>
+    request(`/wishlist/${productId}/collection`, { method: 'PUT', body: JSON.stringify({ collection_name }) }),
+  getWishlistCollections: () => request('/wishlist/collections'),
+  createWishlistCollection: (body) => request('/wishlist/collections', { method: 'POST', body: JSON.stringify(body) }),
+  deleteWishlistCollection: (name) => request(`/wishlist/collections/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+  getWishlistNotifications: () => request('/wishlist/notifications'),
+  markNotificationRead: (id) => request(`/wishlist/notifications/${id}/read`, { method: 'PATCH' }),
+  getProductPriceHistory: (productId) => request(`/wishlist/price-history/${productId}`),
 
   // Cart
   getCart: () => request('/cart'),

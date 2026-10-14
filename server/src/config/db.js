@@ -28,6 +28,9 @@ const memoryStore = {
   user_fit_profiles: [],
   lookbooks: [],
   lookbook_outfits: [],
+  wishlist_collections: [],
+  price_history: [],
+  user_notifications: [],
   nextId: {
     users: 1,
     user_preferences: 1,
@@ -48,6 +51,9 @@ const memoryStore = {
     user_fit_profiles: 1,
     lookbooks: 1,
     lookbook_outfits: 1,
+    wishlist_collections: 1,
+    price_history: 1,
+    user_notifications: 1,
   }
 };
 
@@ -507,6 +513,74 @@ async function initMemoryStore() {
   }
   memoryStore.nextId.products = pId;
   memoryStore.nextId.product_variants = vId;
+
+  // Seed Wishlist Collections for Priya (User 2)
+  memoryStore.wishlist_collections = [
+    { id: 1, user_id: 2, name: 'All Saved Pieces', description: 'Complete archive of saved garments', icon: 'bookmark', created_at: new Date() },
+    { id: 2, user_id: 2, name: 'Autumn Tailoring', description: 'Structured coats and blazers for cooler weather', icon: 'feather', created_at: new Date() },
+    { id: 3, user_id: 2, name: 'Investment Staples', description: 'Timeless luxury essentials with high utility', icon: 'gem', created_at: new Date() }
+  ];
+  memoryStore.nextId.wishlist_collections = 4;
+
+  // Seed Wishlisted Products for Priya with Target Prices
+  memoryStore.wishlists = [
+    {
+      id: 1,
+      user_id: 2,
+      product_id: 1,
+      collection_name: 'Autumn Tailoring',
+      target_price: 6500.00,
+      alert_triggered: false,
+      notes: 'Key foundational layer for studio reviews.',
+      created_at: new Date(Date.now() - 15 * 86400000)
+    },
+    {
+      id: 2,
+      user_id: 2,
+      product_id: 3,
+      collection_name: 'Investment Staples',
+      target_price: 9000.00,
+      alert_triggered: false,
+      notes: 'Plan to purchase once internship bonus arrives.',
+      created_at: new Date(Date.now() - 8 * 86400000)
+    },
+    {
+      id: 3,
+      user_id: 2,
+      product_id: 5,
+      collection_name: 'All Saved Pieces',
+      target_price: 4500.00,
+      alert_triggered: true,
+      notes: 'Target alert met: currently discounted to ₹4,200.',
+      created_at: new Date(Date.now() - 4 * 86400000)
+    }
+  ];
+  memoryStore.nextId.wishlists = 4;
+
+  // Seed Price History for demo products
+  memoryStore.price_history = [
+    { id: 1, product_id: 1, price: 7200.00, recorded_at: new Date(Date.now() - 30 * 86400000) },
+    { id: 2, product_id: 1, price: 6800.00, recorded_at: new Date(Date.now() - 10 * 86400000) },
+    { id: 3, product_id: 3, price: 9500.00, recorded_at: new Date(Date.now() - 25 * 86400000) },
+    { id: 4, product_id: 5, price: 4900.00, recorded_at: new Date(Date.now() - 20 * 86400000) },
+    { id: 5, product_id: 5, price: 4200.00, recorded_at: new Date(Date.now() - 2 * 86400000) }
+  ];
+  memoryStore.nextId.price_history = 6;
+
+  // Seed User In-App Notifications
+  memoryStore.user_notifications = [
+    {
+      id: 1,
+      user_id: 2,
+      type: 'target_price_met',
+      title: 'Target Price Reached!',
+      message: 'A wishlisted item is now available for ₹4,200, matching your target alert of ₹4,500.',
+      product_id: 5,
+      is_read: false,
+      created_at: new Date(Date.now() - 2 * 86400000)
+    }
+  ];
+  memoryStore.nextId.user_notifications = 2;
 }
 
 /**
