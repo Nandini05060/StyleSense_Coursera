@@ -14,7 +14,8 @@ import {
   Sparkles,
   Calendar,
   Compass,
-  Ruler
+  Ruler,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -215,6 +216,14 @@ export default function Navbar() {
                       </Link>
 
                       <Link
+                        to="/lookbook"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-charcoal hover:bg-ivory transition-colors"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-burgundy" />
+                        <span>Capsules & Lookbook</span>
+                      </Link>
+
+                      <Link
                         to="/style-studio"
                         className="flex items-center gap-2 px-4 py-2 text-xs text-charcoal hover:bg-ivory transition-colors"
                       >
@@ -286,6 +295,13 @@ export default function Navbar() {
               className="block py-2 text-xs font-sans font-medium uppercase tracking-[0.18em] text-burgundy font-semibold"
             >
               Fit Finder
+            </Link>
+            <Link
+              to="/lookbook"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-xs font-sans font-medium uppercase tracking-[0.18em] text-charcoal hover:text-burgundy"
+            >
+              Lookbooks & Capsules
             </Link>
             <Link
               to="/style-studio"

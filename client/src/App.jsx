@@ -18,6 +18,8 @@ import OutfitBuilder from './pages/OutfitBuilder';
 import MixMatchStudio from './pages/MixMatchStudio';
 import StylePassport from './pages/StylePassport';
 import FitFinder from './pages/FitFinder';
+import Lookbook from './pages/Lookbook';
+import SharedLookbook from './pages/SharedLookbook';
 import Wardrobe from './pages/Wardrobe';
 import OutfitPlanner from './pages/OutfitPlanner';
 import Wishlist from './pages/Wishlist';
@@ -47,6 +49,8 @@ export default function App() {
                     <Route path="/style-passport" element={<StylePassport />} />
                     <Route path="/mix-match" element={<MixMatchStudio />} />
                     <Route path="/fit-finder" element={<FitFinder />} />
+                    <Route path="/lookbook" element={<Lookbook />} />
+                    <Route path="/lookbook/shared/:token" element={<SharedLookbook />} />
                     <Route path="/wardrobe" element={<Wardrobe />} />
                     <Route path="/outfit-planner" element={<OutfitPlanner />} />
                     <Route path="/outfit-builder" element={<OutfitBuilder />} />

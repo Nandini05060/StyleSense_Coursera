@@ -126,6 +126,16 @@ export const api = {
   updateFitPreferences: (body) => request('/fit/preferences', { method: 'PUT', body: JSON.stringify(body) }),
   evaluateFit: (body) => request('/fit/evaluate', { method: 'POST', body: JSON.stringify(body) }),
 
+  // Personal Lookbook & Capsule Builder
+  getLookbooks: () => request('/lookbooks'),
+  getLookbookById: (id) => request(`/lookbooks/${id}`),
+  createLookbook: (body) => request('/lookbooks', { method: 'POST', body: JSON.stringify(body) }),
+  updateLookbook: (id, body) => request(`/lookbooks/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteLookbook: (id) => request(`/lookbooks/${id}`, { method: 'DELETE' }),
+  addOutfitToLookbook: (id, body) => request(`/lookbooks/${id}/outfits`, { method: 'POST', body: JSON.stringify(body) }),
+  removeOutfitFromLookbook: (id, outfitId) => request(`/lookbooks/${id}/outfits/${outfitId}`, { method: 'DELETE' }),
+  getSharedLookbook: (token) => request(`/lookbooks/shared/${token}`),
+
   // Admin
   getAdminSummary: () => request('/admin/summary'),
   createProduct: (body) => request('/admin/products', { method: 'POST', body: JSON.stringify(body) }),

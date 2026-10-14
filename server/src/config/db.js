@@ -26,6 +26,8 @@ const memoryStore = {
   dismissed_gap_suggestions: [],
   user_style_profiles: [],
   user_fit_profiles: [],
+  lookbooks: [],
+  lookbook_outfits: [],
   nextId: {
     users: 1,
     user_preferences: 1,
@@ -44,6 +46,8 @@ const memoryStore = {
     dismissed_gap_suggestions: 1,
     user_style_profiles: 1,
     user_fit_profiles: 1,
+    lookbooks: 1,
+    lookbook_outfits: 1,
   }
 };
 
@@ -416,6 +420,42 @@ async function initMemoryStore() {
     { id: 4, wardrobe_item_id: 9, user_id: 2, worn_date: '2026-10-13', occasion_worn: 'college', notes: 'Campus commute', created_at: new Date() }
   ];
   memoryStore.nextId.wardrobe_wear_logs = 5;
+
+  // Initial Seeded Lookbooks for Priya (User 2)
+  memoryStore.lookbooks = [
+    {
+      id: 1,
+      user_id: 2,
+      title: 'Autumn Minimalist Capsule',
+      description: 'Curated rotation of high-utility neutral essentials, transitioning effortlessly from design studio reviews to campus lectures.',
+      theme: 'Minimalist Architecture',
+      cover_image_url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1000&auto=format&fit=crop&q=80',
+      is_public: true,
+      share_token: 'autumn-capsule-7a91bf',
+      created_at: new Date(Date.now() - 10 * 86400000),
+      updated_at: new Date()
+    },
+    {
+      id: 2,
+      user_id: 2,
+      title: 'Monochrome Tailored Ensembles',
+      description: 'Structured silhouettes in obsidian, ivory, and deep charcoal with understated elegance for presentation days.',
+      theme: 'Noir Tailoring',
+      cover_image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1000&auto=format&fit=crop&q=80',
+      is_public: true,
+      share_token: 'monochrome-tailored-9e23c1',
+      created_at: new Date(Date.now() - 5 * 86400000),
+      updated_at: new Date()
+    }
+  ];
+  memoryStore.nextId.lookbooks = 3;
+
+  memoryStore.lookbook_outfits = [
+    { id: 1, lookbook_id: 1, outfit_id: 1, position: 0, curator_note: 'Daily rotation: Merino mockneck knit with selvedge denim and court sneakers.' },
+    { id: 2, lookbook_id: 1, outfit_id: 2, position: 1, curator_note: 'Presentation look: Italian wool navy blazer with pleated charcoal trousers.' },
+    { id: 3, lookbook_id: 2, outfit_id: 2, position: 0, curator_note: 'Sharp corporate silhouette with cognac loafers.' }
+  ];
+  memoryStore.nextId.lookbook_outfits = 4;
 
   memoryStore.categories = categoriesData.map((c, i) => ({
     id: i + 1,
