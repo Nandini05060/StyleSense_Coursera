@@ -90,6 +90,7 @@ export default function Wardrobe() {
   const [formSize, setFormSize] = useState('M');
   const [formBrand, setFormBrand] = useState('');
   const [formPrice, setFormPrice] = useState('');
+  const [formWearsCount, setFormWearsCount] = useState(0);
   const [formImageUrl, setFormImageUrl] = useState('');
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadMode, setUploadMode] = useState('url'); // 'url' | 'file'
@@ -228,6 +229,7 @@ export default function Wardrobe() {
     setFormSize('M');
     setFormBrand('');
     setFormPrice('');
+    setFormWearsCount(0);
     setFormImageUrl('');
     setUploadFile(null);
     setUploadMode('url');
@@ -245,6 +247,7 @@ export default function Wardrobe() {
     setFormSize(item.size || 'M');
     setFormBrand(item.brand || '');
     setFormPrice(item.purchase_price !== null && item.purchase_price !== undefined ? String(item.purchase_price) : '');
+    setFormWearsCount(item.wears_count !== undefined && item.wears_count !== null ? Number(item.wears_count) : 0);
     setFormImageUrl(item.image_url || '');
     setUploadFile(null);
     setUploadMode('url');
@@ -285,6 +288,7 @@ export default function Wardrobe() {
         size: formSize.trim(),
         brand: formBrand.trim() || null,
         purchase_price: formPrice !== '' ? parseFloat(formPrice) : null,
+        wears_count: Math.max(0, parseInt(formWearsCount, 10) || 0),
         image_url: finalImageUrl
       };
 
@@ -596,7 +600,7 @@ export default function Wardrobe() {
                             {cpw.status === 'calculated'
                               ? `${formatINR(cpw.costPerWear)} / wear`
                               : cpw.status === 'never_worn'
-                              ? 'Unworn (0 wears)'
+                              ? 'Not worn yet'
                               : 'Price not logged'}
                           </span>
                           <span className="text-white/80 uppercase tracking-widest text-[9px]">
@@ -664,14 +668,158 @@ export default function Wardrobe() {
               <>
                 {/* Rule Documentation & Explanatory Box */}
                 <div className="bg-white border-l-4 border-burgundy p-6 shadow-sm">
-                  <h3 className="font-serif text-lg text-charcoal font-medium mb-1">
-                    How StyleSense AI Calculates Cost-Per-Wear
-                  </h3>
-                  <p className="text-xs text-taupe font-sans leading-relaxed">
-                    <strong className="text-charcoal">Formula:</strong> <span className="font-mono bg-ivory px-2 py-0.5 border border-taupe-light text-charcoal">Cost per Wear = Purchase Price / Recorded Wears</span>.
-                    Items with 0 wears show as "Never Worn" to safely avoid zero division.
-                    Underused garments are identified when owned for <strong className="text-charcoal">30 or more days</strong> with <strong className="text-charcoal">2 or fewer logged wears</strong>, or items never worn.
-                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                    <h3 className="font-serif text-lg text-charcoal font-medium">
+                      How StyleSense AI Calculates Cost-Per-Wear & Identifies Underused Items
+                    </h3>
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-burgundy bg-burgundy/10 px-2.5 py-1 self-start sm:self-auto">
+                      Deterministic Formula
+                    </span>
+                  </div>
+                  <div className="text-xs text-taupe font-sans leading-relaxed space-y-2">
+                    <p>
+                      <strong className="text-charcoal font-semibold">Cost Per Wear Formula:</strong>{' '}
+                      <span className="font-mono bg-ivory px-2 py-0.5 border border-taupe-light text-charcoal">
+                        Cost per Wear = Purchase Price / Recorded Number of Wears
+                      </span>
+                      . If the wear count is zero, the garment displays <strong className="text-charcoal font-semibold">"Not worn yet"</strong> instead of dividing by zero.
+                    </p>
+                    <p>
+                      <strong className="text-charcoal font-semibold">Underused Garment Rule:</strong> Any garment owned for <strong className="text-charcoal font-semibold">30 or more days</strong> with <strong className="text-charcoal font-semibold">2 or fewer logged wears</strong>, or never worn since adding to your wardrobe. Users can correct or update usage records at any time by clicking <span className="text-burgundy font-semibold">"Update Wears"</span>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Planned Shopping Budget vs Actual Recorded Purchases */}
+                <div className="bg-white border border-taupe-light/70 p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-taupe-light/60 mb-6 gap-2">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-widest text-burgundy font-bold block mb-0.5">
+                        Financial Stewardship
+                      </span>
+                      <h4 className="font-serif text-lg font-semibold text-charcoal">
+                        Planned Shopping Budget vs. Recorded Closet Investment
+                      </h4>
+                    </div>
+                    {analytics.budgetComparison?.plannedBudget && (
+                      <span
+                        className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1 self-start sm:self-auto border ${
+                          analytics.budgetComparison.status === 'within_budget'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-red-50 text-red-800 border-red-200'
+                        }`}
+                      >
+                        {analytics.budgetComparison.status === 'within_budget'
+                          ? `Within Planned Budget (Remaining: ${formatINR(Math.max(0, analytics.budgetComparison.remainingBudget))})`
+                          : `Budget Exceeded by ${formatINR(Math.abs(analytics.budgetComparison.remainingBudget))}`}
+                      </span>
+                    )}
+                  </div>
+
+                  {analytics.budgetComparison?.plannedBudget ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="p-4 bg-ivory/60 border border-taupe-light/50">
+                          <span className="text-[10px] uppercase tracking-widest text-taupe block font-sans">
+                            Planned Seasonal Budget
+                          </span>
+                          <span className="font-serif text-2xl font-bold text-charcoal mt-1 block">
+                            {formatINR(analytics.budgetComparison.plannedBudget)}
+                          </span>
+                          <span className="text-[10px] text-taupe font-sans mt-0.5 block">Configured in Style Passport</span>
+                        </div>
+                        <div className="p-4 bg-ivory/60 border border-taupe-light/50">
+                          <span className="text-[10px] uppercase tracking-widest text-taupe block font-sans">
+                            Recorded Closet Spend
+                          </span>
+                          <span className="font-serif text-2xl font-bold text-charcoal mt-1 block">
+                            {formatINR(analytics.budgetComparison.actualInvestment)}
+                          </span>
+                          <span className="text-[10px] text-taupe font-sans mt-0.5 block">Across logged garment prices</span>
+                        </div>
+                        <div className="p-4 bg-ivory/60 border border-taupe-light/50">
+                          <span className="text-[10px] uppercase tracking-widest text-taupe block font-sans">
+                            Budget Utilization
+                          </span>
+                          <span className="font-serif text-2xl font-bold text-burgundy mt-1 block">
+                            {analytics.budgetComparison.utilizationPercentage || 0}%
+                          </span>
+                          <span className="text-[10px] text-taupe font-sans mt-0.5 block">Of allocated seasonal ceiling</span>
+                        </div>
+                      </div>
+
+                      {/* Thin Editorial Progress Bar */}
+                      <div>
+                        <div className="flex justify-between text-[11px] text-taupe mb-1 font-sans">
+                          <span>Progress to Budget Cap</span>
+                          <span>{analytics.budgetComparison.utilizationPercentage || 0}%</span>
+                        </div>
+                        <div className="w-full bg-ivory h-2.5 overflow-hidden border border-taupe-light/50">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              analytics.budgetComparison.status === 'within_budget' ? 'bg-burgundy' : 'bg-red-700'
+                            }`}
+                            style={{ width: `${Math.min(100, analytics.budgetComparison.utilizationPercentage || 0)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-ivory/50 border border-taupe-light/60 gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-charcoal">No seasonal budget configured in your Style Passport.</p>
+                        <p className="text-[11px] text-taupe mt-0.5">
+                          Set a planned seasonal clothing budget to unlock real-time financial tracking against closet acquisitions.
+                        </p>
+                      </div>
+                      <Link
+                        to="/style-passport"
+                        className="inline-flex items-center gap-1.5 bg-charcoal hover:bg-burgundy text-white text-xs uppercase tracking-widest font-semibold px-4 py-2 transition-colors whitespace-nowrap"
+                      >
+                        <span>Set Budget in Passport</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                {/* Monthly Wear Trends */}
+                <div className="bg-white border border-taupe-light/70 p-6 shadow-sm">
+                  <div className="flex items-center justify-between pb-4 border-b border-taupe-light/60 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-burgundy" />
+                      <h4 className="font-serif text-base font-semibold text-charcoal">Monthly Wear Trends</h4>
+                    </div>
+                    <span className="text-[10px] text-taupe uppercase tracking-wider">Historical Utility</span>
+                  </div>
+
+                  {analytics.monthlyWearTrends && analytics.monthlyWearTrends.length > 0 ? (
+                    <div className="space-y-4">
+                      {(() => {
+                        const maxWears = Math.max(...analytics.monthlyWearTrends.map(m => m.wears), 1);
+                        return analytics.monthlyWearTrends.map(item => (
+                          <div key={item.month}>
+                            <div className="flex justify-between text-xs text-charcoal mb-1">
+                              <span className="font-medium">{item.label}</span>
+                              <span className="font-mono text-taupe font-semibold">
+                                {item.wears} wear{item.wears === 1 ? '' : 's'} logged
+                              </span>
+                            </div>
+                            <div className="w-full bg-ivory h-2.5 overflow-hidden border border-taupe-light/40">
+                              <div
+                                className="bg-burgundy h-full transition-all duration-500"
+                                style={{ width: `${Math.round((item.wears / maxWears) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-taupe py-6 text-center font-sans">
+                      No monthly wear activity recorded yet. As you record wears with the "Log Wear" button, monthly frequency trends will be charted here.
+                    </p>
+                  )}
                 </div>
 
                 {/* 2-Column Grid: Most Worn vs Underused */}
@@ -704,7 +852,7 @@ export default function Wardrobe() {
                             </div>
                             <div className="text-right">
                               <span className="text-xs font-bold text-emerald-800">
-                                {item.cost_per_wear ? `${formatINR(item.cost_per_wear)}/wear` : '—'}
+                                {item.cost_per_wear ? `${formatINR(item.cost_per_wear)}/wear` : 'Not worn yet'}
                               </span>
                               <span className="text-[10px] text-taupe block">{item.wears_count} wears</span>
                             </div>
@@ -729,7 +877,7 @@ export default function Wardrobe() {
                     ) : (
                       <div className="space-y-3">
                         {analytics.underusedItems.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between p-3 bg-ivory/50 border border-taupe-light/50">
+                          <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-ivory/50 border border-taupe-light/50 gap-2">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-12 bg-taupe-light/30 overflow-hidden flex-shrink-0">
                                 <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
@@ -737,14 +885,26 @@ export default function Wardrobe() {
                               <div>
                                 <p className="text-xs font-semibold text-charcoal truncate max-w-[180px]">{item.name}</p>
                                 <p className="text-[10px] text-burgundy font-medium">{item.reason}</p>
+                                <span className="text-[9px] text-taupe font-mono">
+                                  Cost: {item.cost_per_wear_display || (item.wears_count === 0 ? 'Not worn yet' : '—')}
+                                </span>
                               </div>
                             </div>
-                            <button
-                              onClick={() => navigate('/outfit-planner')}
-                              className="text-[10px] uppercase tracking-wider font-bold text-charcoal hover:text-burgundy underline"
-                            >
-                              Style This Piece
-                            </button>
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              <button
+                                onClick={(e) => openEditModal(item, e)}
+                                className="text-[10px] uppercase tracking-wider font-semibold text-taupe hover:text-charcoal border border-taupe-light px-2 py-1 bg-white"
+                                title="Update usage record"
+                              >
+                                Update Wears
+                              </button>
+                              <button
+                                onClick={() => navigate('/outfit-planner')}
+                                className="text-[10px] uppercase tracking-wider font-bold text-charcoal hover:text-burgundy bg-burgundy/10 px-2.5 py-1"
+                              >
+                                Style Piece
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -755,13 +915,17 @@ export default function Wardrobe() {
                 {/* Category & Color Breakdown */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="bg-white border border-taupe-light/70 p-6 shadow-sm">
-                    <h4 className="font-serif text-base font-semibold text-charcoal mb-4">Category Distribution</h4>
+                    <h4 className="font-serif text-base font-semibold text-charcoal mb-4">
+                      Category Investment & Distribution
+                    </h4>
                     <div className="space-y-3">
                       {analytics.categoryDistribution?.map((cat) => (
                         <div key={cat.category}>
                           <div className="flex justify-between text-xs text-charcoal mb-1">
-                            <span className="capitalize">{cat.category}</span>
-                            <span className="font-mono text-taupe">{cat.count} items ({cat.percentage}%)</span>
+                            <span className="capitalize font-medium">{cat.category}</span>
+                            <span className="font-mono text-taupe">
+                              {cat.count} items ({cat.percentage}%) • {formatINR(cat.investment || 0)}
+                            </span>
                           </div>
                           <div className="w-full bg-ivory h-2 overflow-hidden border border-taupe-light/40">
                             <div className="bg-charcoal h-full" style={{ width: `${cat.percentage}%` }} />
@@ -1044,8 +1208,8 @@ export default function Wardrobe() {
                 </div>
               </div>
 
-              {/* Size, Brand, Price */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Size, Brand, Price & Recorded Wears */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block uppercase tracking-wider text-taupe text-[10px] font-bold mb-1">
                     Size
@@ -1082,6 +1246,20 @@ export default function Wardrobe() {
                     onChange={(e) => setFormPrice(e.target.value)}
                     placeholder="e.g. 5200"
                     className="w-full bg-ivory px-3 py-2 border border-taupe-light focus:outline-none focus:border-burgundy text-charcoal"
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase tracking-wider text-taupe text-[10px] font-bold mb-1">
+                    Recorded Wears
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={formWearsCount}
+                    onChange={(e) => setFormWearsCount(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-ivory px-3 py-2 border border-taupe-light focus:outline-none focus:border-burgundy text-charcoal font-semibold"
                   />
                 </div>
               </div>
@@ -1288,7 +1466,7 @@ export default function Wardrobe() {
                         {viewingItem.cpw?.status === 'calculated'
                           ? formatINR(viewingItem.cpw.costPerWear)
                           : viewingItem.cpw?.status === 'never_worn'
-                          ? 'Never worn'
+                          ? 'Not worn yet'
                           : '—'}
                       </span>
                     </div>

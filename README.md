@@ -1,7 +1,7 @@
 # StyleSense AI — Your Wardrobe. Your Style. Smarter Choices.
 *A Unique Digital Wardrobe Intelligence Platform & AI-Receptive Fashion Styling System*
 
-[![Tests](https://img.shields.io/badge/Tests-50%20Passed-emerald.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-116%20Passed-emerald.svg)](#testing)
 [![Architecture](https://img.shields.io/badge/Architecture-Full--Stack%20Client--Server-blue.svg)](#architecture)
 [![Design](https://img.shields.io/badge/Palette-Ivory%20%7C%20Charcoal%20%7C%20Burgundy-burgundy.svg)](#design-system)
 

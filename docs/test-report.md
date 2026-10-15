@@ -2,10 +2,9 @@
 
 ## 1. Test Execution Summary
 
-- **Total Test Cases Planned**: 32
-- **Automated Tests Executed**: 31 (Server: 25, Frontend: 6)
+- **Total Automated Tests Executed**: 116 (Server: 86, Frontend: 30)
 - **End-to-End Interactive Browser Tests Executed**: 6 core user flows
-- **Tests Passed**: 32 / 32 (100% Pass Rate)
+- **Tests Passed**: 116 / 116 (100% Pass Rate across all 17 test suites)
 - **Tests Failed**: 0
 - **Test Frameworks**: Vitest v2.1.9, Supertest v7.0.0, React Testing Library v16.0.1, jsdom v25.0.1
 
@@ -47,6 +46,14 @@
 | **TC-30** | Frontend: Image error fallback | Broken image link | Trigger `onError` event | Fallback image displayed | Fallback rendered safely | **PASS** |
 | **TC-31** | Frontend: Mobile viewport navigation | Viewport $< 768$px | Click hamburger menu | Navigation drawer opens | Drawer menu opened | **PASS** |
 | **TC-32** | Frontend: UI state distinction | Loading/Error states | Mount Skeleton and EmptyState | Skeletons & empty states rendered | Visual states distinguished | **PASS** |
+| **TC-33** | Wardrobe Insights: Deterministic Cost-Per-Wear formula | Garment price 6000, 15 wears | Calculate CPW in service | CPW = 400, formatted ₹400.00 | CPW: 400, Status: calculated | **PASS** |
+| **TC-34** | Wardrobe Insights: Zero wears safety protection | Garment price 4500, 0 wears | Calculate CPW | Status `never_worn`, display `Not worn yet` | No divide-by-zero, `Not worn yet` | **PASS** |
+| **TC-35** | Wardrobe Insights: Category investment aggregation | Items with prices across categories | Generate wardrobe analytics | Correct counts, percentages & sums in INR | Category distribution accurate | **PASS** |
+| **TC-36** | Wardrobe Insights: Seasonal budget stewardship comparison | Planned budget 50000, spend 40000 | Generate budget comparison | Status `within_budget`, remaining 10000 | Utilization & status accurate | **PASS** |
+| **TC-37** | Wardrobe Insights: Underused garment rule identification | Owned 30+ days with $\le 2$ wears | Run underused filter | Garment flagged with restyling reason | Correctly categorized as underused | **PASS** |
+| **TC-38** | Wardrobe Insights: Monthly wear frequency trends | Wear logs across multiple months | Calculate monthly trends | Sorted chronologically with wear sums | Monthly breakdown calculated | **PASS** |
+| **TC-39** | Frontend Insights: Cost-per-wear tab & navigation | Wardrobe page mounted | Click Cost-Per-Wear Tracker tab | Switches tab and displays formula guide | Formula & stewardship rendered | **PASS** |
+| **TC-40** | Frontend Insights: Highest utility & underused UI | Analytics populated | Render Wardrobe analytics tab | Renders Top 5 utility pieces & underused alerts | Rendered with INR formatting | **PASS** |
 
 ---
 

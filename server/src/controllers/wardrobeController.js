@@ -252,6 +252,7 @@ export async function updateWardrobeItem(req, res, next) {
       size,
       brand,
       purchase_price,
+      wears_count,
       image_url
     } = req.body;
 
@@ -282,6 +283,9 @@ export async function updateWardrobeItem(req, res, next) {
       if (purchase_price !== undefined) {
         existing.purchase_price = purchase_price !== null && purchase_price !== '' ? parseFloat(purchase_price) : null;
       }
+      if (wears_count !== undefined && wears_count !== null && !isNaN(wears_count)) {
+        existing.wears_count = Math.max(0, parseInt(wears_count, 10));
+      }
       if (image_url !== undefined) existing.image_url = image_url;
       existing.updated_at = new Date();
 
@@ -307,6 +311,10 @@ export async function updateWardrobeItem(req, res, next) {
       ? (purchase_price !== null && purchase_price !== '' ? parseFloat(purchase_price) : null)
       : rows[0].purchase_price;
 
+    const updatedWears = wears_count !== undefined && wears_count !== null && !isNaN(wears_count)
+      ? Math.max(0, parseInt(wears_count, 10))
+      : rows[0].wears_count;
+
     await query(
       `UPDATE wardrobe_items SET
         name = COALESCE(?, name),
@@ -317,6 +325,7 @@ export async function updateWardrobeItem(req, res, next) {
         size = COALESCE(?, size),
         brand = ?,
         purchase_price = ?,
+        wears_count = ?,
         image_url = COALESCE(?, image_url)
        WHERE id = ?`,
       [
@@ -328,6 +337,7 @@ export async function updateWardrobeItem(req, res, next) {
         size ? size.trim() : null,
         brand ? brand.trim() : (brand === null ? null : rows[0].brand),
         updatedPrice,
+        updatedWears,
         image_url || null,
         itemId
       ]
@@ -533,16 +543,30 @@ export async function getWardrobeAnalytics(req, res, next) {
     const userId = req.user.id;
     let items = [];
     let wearLogs = [];
+    let userProfile = null;
+    let savedOutfitsCount = 0;
 
     if (memoryStore.wardrobe_items) {
       items = memoryStore.wardrobe_items.filter(i => i.user_id === userId);
       wearLogs = (memoryStore.wardrobe_wear_logs || []).filter(w => w.user_id === userId);
+      userProfile = (memoryStore.user_style_profiles || []).find(p => p.user_id === userId) ||
+                    (memoryStore.user_preferences || []).find(p => p.user_id === userId) || null;
+      savedOutfitsCount = (memoryStore.saved_outfits || []).filter(o => o.user_id === userId).length;
     } else {
       items = await query('SELECT * FROM wardrobe_items WHERE user_id = ?', [userId]);
-      wearLogs = await query('SELECT * FROM wardrobe_wear_logs WHERE user_id = ?', [userId]);
+      wearLogs = await query('SELECT * FROM wardrobe_wear_logs WHERE user_id = ? ORDER BY worn_date ASC', [userId]);
+      const profRows = await query('SELECT * FROM user_style_profiles WHERE user_id = ?', [userId]);
+      if (profRows && profRows.length > 0) {
+        userProfile = profRows[0];
+      } else {
+        const prefRows = await query('SELECT * FROM user_preferences WHERE user_id = ?', [userId]);
+        userProfile = prefRows && prefRows.length > 0 ? prefRows[0] : null;
+      }
+      const outfitRows = await query('SELECT COUNT(*) as cnt FROM saved_outfits WHERE user_id = ?', [userId]);
+      savedOutfitsCount = outfitRows && outfitRows.length > 0 ? outfitRows[0].cnt : 0;
     }
 
-    const analytics = generateWardrobeAnalytics(items, wearLogs);
+    const analytics = generateWardrobeAnalytics(items, wearLogs, userProfile, savedOutfitsCount);
     return res.status(200).json({
       success: true,
       data: analytics

@@ -8,7 +8,7 @@
  * Calculates Cost Per Wear safely avoiding division by zero
  * @param {number|null} purchasePrice
  * @param {number} wearsCount
- * @returns {object} { costPerWear, status, message }
+ * @returns {object} { costPerWear, status, display, message }
  */
 export function calculateCostPerWear(purchasePrice, wearsCount = 0) {
   const numericPrice = purchasePrice !== null && purchasePrice !== undefined ? Number(purchasePrice) : null;
@@ -18,6 +18,7 @@ export function calculateCostPerWear(purchasePrice, wearsCount = 0) {
     return {
       costPerWear: null,
       status: 'missing_price',
+      display: 'Price not logged',
       message: 'Purchase price not recorded for this item.'
     };
   }
@@ -26,6 +27,7 @@ export function calculateCostPerWear(purchasePrice, wearsCount = 0) {
     return {
       costPerWear: null,
       status: 'never_worn',
+      display: 'Not worn yet',
       purchasePrice: numericPrice,
       message: 'Item has not been worn yet (0 wears recorded).'
     };
@@ -35,9 +37,10 @@ export function calculateCostPerWear(purchasePrice, wearsCount = 0) {
   return {
     costPerWear: cpw,
     status: 'calculated',
+    display: `₹${cpw.toFixed(2)}`,
     purchasePrice: numericPrice,
     wearsCount: numericWears,
-    message: `$${cpw.toFixed(2)} per wear across ${numericWears} wear${numericWears === 1 ? '' : 's'}.`
+    message: `₹${cpw.toFixed(2)} per wear across ${numericWears} wear${numericWears === 1 ? '' : 's'}.`
   };
 }
 
@@ -45,21 +48,58 @@ export function calculateCostPerWear(purchasePrice, wearsCount = 0) {
  * Generates editorial wardrobe analytics
  * @param {Array} items - User's wardrobe items
  * @param {Array} wearLogs - User's wear activity logs
+ * @param {object|null} userProfile - User's style profile or preferences (for budget comparison)
+ * @param {number} savedOutfitsCount - Count of user's saved outfits
  * @returns {object} analytics summary
  */
-export function generateWardrobeAnalytics(items = [], wearLogs = []) {
+export function generateWardrobeAnalytics(items = [], wearLogs = [], userProfile = null, savedOutfitsCount = 0) {
   const totalItems = items.length;
+  const outfitsCount = Number(savedOutfitsCount) || 0;
+
+  // Monthly Wear Trends calculation helper
+  const calculateMonthlyTrends = (logs) => {
+    if (!logs || logs.length === 0) return [];
+    const monthCounts = {};
+    for (const log of logs) {
+      const dateVal = log.worn_date || log.created_at;
+      if (!dateVal) continue;
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) continue;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (!monthCounts[key]) {
+        monthCounts[key] = { month: key, label, wears: 0 };
+      }
+      monthCounts[key].wears += 1;
+    }
+    return Object.values(monthCounts).sort((a, b) => a.month.localeCompare(b.month));
+  };
+
+  const monthlyWearTrends = calculateMonthlyTrends(wearLogs);
 
   if (totalItems === 0) {
+    const plannedBudget = userProfile?.budget_max ? Number(userProfile.budget_max) : null;
     return {
       totalItems: 0,
+      savedOutfitsCount: outfitsCount,
       totalInvestment: 0,
+      itemsWithPriceRecorded: 0,
+      totalWearsRecorded: 0,
       averageCostPerWear: null,
       mostWornItems: [],
       underusedItems: [],
-      categoryDistribution: {},
-      colorDistribution: {},
-      occasionCoverage: {},
+      underusedRule: 'Items with 0 logged wears or owned 30+ days with 2 or fewer recorded wears.',
+      categoryDistribution: [],
+      colorDistribution: [],
+      occasionCoverage: [],
+      monthlyWearTrends,
+      budgetComparison: {
+        plannedBudget,
+        actualInvestment: 0,
+        remainingBudget: plannedBudget,
+        utilizationPercentage: 0,
+        status: plannedBudget ? 'within_budget' : 'no_budget_set'
+      },
       status: 'empty_wardrobe',
       message: 'Add items to your digital wardrobe to unlock cost-per-wear and usage insights.'
     };
@@ -72,13 +112,14 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
   let validCpwItemsCount = 0;
 
   const categoryCounts = {};
+  const categoryInvestments = {};
   const colorCounts = {};
   const occasionCounts = {};
 
   const decoratedItems = items.map(item => {
     const cpwData = calculateCostPerWear(item.purchase_price, item.wears_count);
     const wears = Number(item.wears_count) || 0;
-    const price = item.purchase_price ? Number(item.purchase_price) : null;
+    const price = item.purchase_price !== null && item.purchase_price !== undefined ? Number(item.purchase_price) : null;
 
     if (price !== null && !isNaN(price)) {
       totalInvestment += price;
@@ -92,9 +133,10 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
       validCpwItemsCount++;
     }
 
-    // Category tally
+    // Category tally & investment sum
     const cat = item.category ? item.category.toLowerCase() : 'other';
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    categoryInvestments[cat] = (categoryInvestments[cat] || 0) + (price !== null && !isNaN(price) ? price : 0);
 
     // Color tally
     const color = item.color ? item.color.toLowerCase() : 'unspecified';
@@ -127,7 +169,8 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
       image_url: i.image_url,
       wears_count: i.wears_count,
       purchase_price: i.purchase_price,
-      cost_per_wear: i.cpwData.costPerWear
+      cost_per_wear: i.cpwData.costPerWear,
+      cost_per_wear_display: i.cpwData.costPerWear ? `₹${i.cpwData.costPerWear.toFixed(2)}` : 'Not worn yet'
     }));
 
   // Underused items rule:
@@ -148,8 +191,9 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
       wears_count: i.wears_count,
       purchase_price: i.purchase_price,
       daysOwned: i.daysOwned,
+      cost_per_wear_display: (Number(i.wears_count) || 0) === 0 ? 'Not worn yet' : (i.cpwData.costPerWear ? `₹${i.cpwData.costPerWear.toFixed(2)}` : 'Price not logged'),
       reason: (Number(i.wears_count) || 0) === 0
-        ? 'Never worn since adding to wardrobe'
+        ? 'Not worn yet since adding to closet'
         : `Only worn ${i.wears_count} time${i.wears_count === 1 ? '' : 's'} across ${i.daysOwned} days`
     }));
 
@@ -157,18 +201,32 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
     ? Number((weightedCpwSum / validCpwItemsCount).toFixed(2))
     : null;
 
+  // Planned shopping budget vs actual recorded purchases
+  const plannedBudget = userProfile?.budget_max ? Number(userProfile.budget_max) : null;
+  const roundedInvestment = Number(totalInvestment.toFixed(2));
+  const budgetComparison = {
+    plannedBudget,
+    actualInvestment: roundedInvestment,
+    remainingBudget: plannedBudget !== null ? Number((plannedBudget - roundedInvestment).toFixed(2)) : null,
+    utilizationPercentage: plannedBudget && plannedBudget > 0 ? Math.round((roundedInvestment / plannedBudget) * 100) : null,
+    status: plannedBudget === null ? 'no_budget_set' : roundedInvestment <= plannedBudget ? 'within_budget' : 'exceeded_budget'
+  };
+
   return {
     totalItems,
+    savedOutfitsCount: outfitsCount,
     itemsWithPriceRecorded: itemsWithPrice,
-    totalInvestment: Number(totalInvestment.toFixed(2)),
+    totalInvestment: roundedInvestment,
     totalWearsRecorded,
     averageCostPerWear,
     mostWornItems,
     underusedItems,
+    underusedRule: 'Items with 0 logged wears or owned 30+ days with 2 or fewer recorded wears.',
     categoryDistribution: Object.entries(categoryCounts).map(([category, count]) => ({
       category,
       count,
-      percentage: Math.round((count / totalItems) * 100)
+      percentage: Math.round((count / totalItems) * 100),
+      investment: Number((categoryInvestments[category] || 0).toFixed(2))
     })),
     colorDistribution: Object.entries(colorCounts).map(([color, count]) => ({
       color,
@@ -180,6 +238,8 @@ export function generateWardrobeAnalytics(items = [], wearLogs = []) {
       count,
       percentage: Math.round((count / totalItems) * 100)
     })),
+    monthlyWearTrends,
+    budgetComparison,
     status: 'complete'
   };
 }
